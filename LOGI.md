@@ -57,7 +57,8 @@ arvestuses; sama projektinumbriga kirjed liidetakse.
 
 ### Avalikustamine
 - MS otsustas repositooriumi avalikuks teha; viited eelnevale analüüsile muudeti enne seda
-  neutraalseks ka git-ajaloos.
+  neutraalseks ka git-ajaloos. Vana repositoorium kustutati ja loodi uus puhta ajalooga.
+- Repositooriumi lisati ka tulemus (Excel); CORDIS-e toorandmed (~125 MB) jäetakse välja.
 
 ### Lahtised küsimused
 - Jooksva ja tulevaste aastate summad võivad olla plaanitud, mitte välja makstud.

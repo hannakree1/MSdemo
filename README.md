@@ -12,6 +12,8 @@ python3 prg_ulevaade.py
 
 Tulemus: `valjund/PRG_ulevaade_<kuupäev>.xlsx`. Iga käivitus võtab ETIS-ist värsked andmed.
 
+Viimane tulemus on repositooriumis: [`valjund/PRG_ulevaade_2026-10-27.xlsx`](valjund/PRG_ulevaade_2026-10-27.xlsx).
+
 ## Exceli lehed
 
 | Leht | Sisu |
