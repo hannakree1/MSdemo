@@ -10,8 +10,10 @@ Metoodika:
   aktiivne projekt = projekt, millel on sel aastal rahastust.
 - Asutused: koondatud peaasutuse tasemele (nimi enne esimest koma). Mitme asutusega
   projekt jagatakse asutuste vahel võrdselt.
-- Valdkonnad: projekt (ja selle rahastus) jagatakse ETIS-i valdkondade vahel nende
-  osakaalude järgi, seega murdosad liituvad kokku täpselt projektide arvuks.
+- Valdkonnad: Frascati klassifikaator. Projekt (ja selle rahastus) jagatakse valdkondade
+  vahel osakaalude järgi, seega murdosad liituvad kokku täpselt projektide arvuks.
+  Frascati valdkondadel ETIS-is osakaalu pole; ETIS hoiab need paarides ETIS-i
+  valdkondadega, seega võetakse osakaal samal kohal olevalt ETIS-i valdkonnalt.
 """
 
 import json
@@ -33,11 +35,13 @@ VALJA_JAETUD = {
     "ebecf66e-1ec0-4923-a01b-cacf5c4abb92": "ETIS-i süsteemi testkirje",
 }
 
-SUURVALDKONNAD = {
-    "1": "Bio- ja keskkonnateadused",
-    "2": "Kultuur ja ühiskond",
-    "3": "Terviseuuringud",
-    "4": "Loodusteadused ja tehnika",
+POHIVALDKONNAD = {
+    "1": "Loodusteadused",
+    "2": "Tehnika ja tehnoloogia",
+    "3": "Arsti- ja terviseteadused",
+    "4": "Põllumajandusteadused",
+    "5": "Sotsiaalteadused",
+    "6": "Humanitaarteadused",
 }
 
 
@@ -68,6 +72,16 @@ def summad_aastate_kaupa(projekt):
             l = min(lopp, date(aasta, 12, 31))
             aastad[aasta] += summa * ((l - a).days + 1) / paevi
     return aastad
+
+
+def valdkonnad(projekt):
+    """Frascati valdkonnad koos osakaaluga, mis võetakse paarilise ETIS-i valdkonna juurest.
+    Sama Frascati kood mitme ETIS-i valdkonna all liidetakse kokku."""
+    osad, nimed = defaultdict(float), {}
+    for e, f in zip(projekt["ResearchAreasEtis"], projekt["ResearchAreasFrascati"], strict=True):
+        osad[f["Code"]] += (e["Percent"] or 0) / 100
+        nimed[f["Code"]] = f["Name"]
+    return [(kood, nimed[kood], osa) for kood, osa in osad.items()]
 
 
 def asutused(projekt):
@@ -103,10 +117,8 @@ def arvuta(projektid):
             asutus[nimi][0] += 1 / len(asut)
             asutus[nimi][1] += kokku / len(asut)
 
-        for v in p["ResearchAreasEtis"]:
-            osa = (v["Percent"] or 0) / 100
-            kood = v["Code"].rstrip(".")
-            ala_nimi[kood] = v["Name"]
+        for kood, nimi, osa in valdkonnad(p):
+            ala_nimi[kood] = nimi
             for rida in (ala[kood], suur[kood.split(".")[0]]):
                 rida[0] += osa
                 rida[1] += kokku * osa
@@ -174,7 +186,8 @@ def kirjuta_excel(koik, tee):
         ["Algusaasta", "Projekt loetakse aastasse, mil see algas; summa on projekti kogurahastus."],
         ["Eelarveaasta", "Rahastus jagatud aastate vahel päevade järgi; aktiivne = sel aastal rahastust."],
         ["Asutused", "Peaasutuse tasemel; mitme asutusega projekt jagatud asutuste vahel võrdselt."],
-        ["Valdkonnad", "Projekt ja rahastus jagatud ETIS-i valdkondade vahel osakaalude järgi."],
+        ["Valdkonnad", "Frascati klassifikaator; projekt ja rahastus jagatud valdkondade vahel osakaalude järgi."],
+        ["", "Osakaal võetud paariliselt ETIS-i valdkonnalt, sest Frascati valdkondadel ETIS-is osakaalu pole."],
         ["Märkus", "Jooksva ja tulevaste aastate summad võivad olla plaanitud, mitte välja makstud."],
         [],
         ["Välja jäetud kirjed"],
@@ -203,23 +216,23 @@ def kirjuta_excel(koik, tee):
     leht(wb, "Asutused", ["Asutus", "PRG-sid", "Osakaal arvust", "Rahastus", "Osakaal rahast"],
          read, [None, ARV, PROTS, EUR, PROTS], [60, 10, 14, 18, 14], ["Kokku", n, 1, raha, 1])
 
-    read = [(f"{k}. {SUURVALDKONNAD[k]}", *r) for k, *r in
+    read = [(f"{k}. {POHIVALDKONNAD[k]}", *r) for k, *r in
             osakaaluga(sorted(suur.items()), n, raha)]
-    leht(wb, "Suurvaldkonnad", ["Suurvaldkond", "PRG-sid (osakaalu järgi)", "Osakaal arvust", "Rahastus", "Osakaal rahast"],
+    leht(wb, "Frascati põhivaldkonnad", ["Põhivaldkond", "PRG-sid (osakaalu järgi)", "Osakaal arvust", "Rahastus", "Osakaal rahast"],
          read, [None, ARV, PROTS, EUR, PROTS], [34, 14, 14, 18, 14], ["Kokku", n, 1, raha, 1])
 
     jarjestus = sorted(ala, key=lambda k: tuple(int(x) for x in k.split(".")))
-    read = [(k, ala_nimi[k], SUURVALDKONNAD[k.split(".")[0]], arv, arv / n, summa, summa / raha)
+    read = [(k, ala_nimi[k], POHIVALDKONNAD[k.split(".")[0]], arv, arv / n, summa, summa / raha)
             for k in jarjestus for arv, summa in [ala[k]]]
-    leht(wb, "Alavaldkonnad", ["Kood", "Alavaldkond", "Suurvaldkond", "PRG-sid (osakaalu järgi)", "Osakaal arvust", "Rahastus", "Osakaal rahast"],
+    leht(wb, "Frascati alavaldkonnad", ["Kood", "Alavaldkond", "Põhivaldkond", "PRG-sid (osakaalu järgi)", "Osakaal arvust", "Rahastus", "Osakaal rahast"],
          read, [None, None, None, ARV, PROTS, EUR, PROTS], [8, 60, 26, 14, 14, 18, 14],
          ["Kokku", None, None, n, 1, raha, 1])
 
     read = [(p["FinancierProjectNr"] or "(number puudub)", p["Title"], p["ProjectStartDate"], p["ProjectEndDate"],
              "; ".join(asutused(p)), vastutavad(p), p["FinancingInPeriodsTotal"] or 0,
-             "; ".join(f'{v["Code"].rstrip(".")} {v["Name"]} ({v["Percent"]:g}%)' for v in p["ResearchAreasEtis"]))
+             "; ".join(f"{kood} {nimi} ({osa:.0%})" for kood, nimi, osa in valdkonnad(p)))
             for p in sorted(projektid, key=lambda p: (kp(p["ProjectStartDate"]), p["FinancierProjectNr"]))]
-    leht(wb, "Projektid", ["Nr", "Pealkiri", "Algus", "Lõpp", "Asutus", "Vastutav täitja", "Rahastus", "Valdkonnad"],
+    leht(wb, "Projektid", ["Nr", "Pealkiri", "Algus", "Lõpp", "Asutus", "Vastutav täitja", "Rahastus", "Frascati valdkonnad"],
          read, [None, None, None, None, None, None, EUR, None], [14, 60, 11, 11, 30, 28, 16, 70])
 
     tee.parent.mkdir(exist_ok=True)

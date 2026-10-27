@@ -20,14 +20,16 @@ Tulemus: `valjund/PRG_ulevaade_<kuupäev>.xlsx`. Iga käivitus võtab ETIS-ist v
 | Algusaasta | Alustatud PRG-de arv ja nende kogurahastus algusaasta järgi |
 | Eelarveaasta | Aktiivsete PRG-de arv ja rahastus eelarveaasta järgi |
 | Asutused | Projektide arv ja rahastus peaasutuse kaupa |
-| Suurvaldkonnad | 4 ETIS-i suurvaldkonda |
-| Alavaldkonnad | ETIS-i alavaldkonnad |
+| Frascati põhivaldkonnad | 6 Frascati põhivaldkonda |
+| Frascati alavaldkonnad | Frascati alavaldkonnad |
 | Projektid | Kõik arvestatud projektid kontrollimiseks |
 
 ## Metoodika
 
-- **Valdkonnad:** projekt ja selle rahastus jagatakse ETIS-i valdkondade vahel nende osakaalude järgi,
-  nii et murdosad liituvad kokku täpselt projektide arvuks.
+- **Valdkonnad:** Frascati klassifikaator. Projekt ja selle rahastus jagatakse valdkondade vahel
+  osakaalude järgi, nii et murdosad liituvad kokku täpselt projektide arvuks. ETIS-is pole Frascati
+  valdkondadel osakaalu; need on salvestatud paarides ETIS-i valdkondadega, seega võetakse osakaal
+  paariliselt ETIS-i valdkonnalt.
 - **Asutused:** koondatud peaasutuse tasemele; mitme asutusega projekt jagatakse asutuste vahel võrdselt.
 - **Eelarveaasta:** aastavahetust ületava rahastusperioodi summa jagatakse aastate vahel päevade järgi.
 - **Välja jäetud kirjed:** `VALJA_JAETUD` skriptis (partnerikirje topeltloenduse vältimiseks ja ETIS-i testkirje).
